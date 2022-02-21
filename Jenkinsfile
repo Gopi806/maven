@@ -1,44 +1,60 @@
+@Library('sharedlibraries')_
 pipeline
 {
     agent any
     stages
     {
-        stage('ContinuousDownload_master')
+        stage('ContinuousDownload')
         {
             steps
             {
-                git credentialsId: '93c02cb2-03f4-4be0-bb78-57e3403d891a', url: 'https://github.com/Gopi806/maven.git'
+                script
+                {
+                    cicd.newGit("https://github.com/Gopi806/maven.git")
+                }
             }
         }
-        stage('ContinuousBuild_master')
+        stage('ContinuousBuild')
         {
             steps
             {
-               sh 'mvn package'
+                script
+                {
+                    cicd.newMaven()
+                }
             }
         }
-        stage('ContinuousDeployment_master')
+        stage('ContinuousDeployment')
         {
             steps
             {
-               deploy adapters: [tomcat9(credentialsId: '93c02cb2-03f4-4be0-bb78-57e3403d891a', path: '', url: 'http://172.31.3.201:8080')], contextPath: 'test2', war: '**/*.war'
+                script
+                {
+                    cicd.newDeploy("172.31.3.201","testapp")
+                }
             }
         }
-        stage('ContinuousTesting_master')
+        stage('ContinuousTesting')
         {
             steps
             {
-                git credentialsId: '93c02cb2-03f4-4be0-bb78-57e3403d891a', url: 'https://github.com/intelliqittrainings/FunctionalTesting.git'
-                sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline/testing.jar'
+                script
+                {
+                    cicd.newGit("https://github.com/intelliqittrainings/FunctionalTesting.git")
+                    cicd.runSelenium("/home/ubuntu/.jenkins/workspace/Pipelinewithlibraries")
+                }
             }
         }
-        stage('ContinousDelivery_master')
+        stage('ContinuousDelivery')
         {
             steps
             {
-                deploy adapters: [tomcat9(credentialsId: '93c02cb2-03f4-4be0-bb78-57e3403d891a', path: '', url: 'http://172.31.2.229:8080')], contextPath: 'prod2', war: '**/*.war'
+                script
+                {
+                    cicd.newApprovals("anitha")
+                    cicd.newDeploy("172.31.2.229","prodapp")
+                }
             }
         }
-        
     }
-}
+    }
